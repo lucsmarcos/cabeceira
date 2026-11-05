@@ -242,7 +242,7 @@
 <script>
 (function () {
   'use strict';
-  var VERSAO = '1.1 (05/11/2026)';
+  var VERSAO = '1.2 (05/11/2026)';
 
   // ====================================================================
   // Utilidades
@@ -277,10 +277,12 @@
     trabalho: 'Rua Maria da Conceição Stanwez, 162, São Paulo, SP',
     pos: {},           // coordenadas encontradas para cada endereço
     hA: '06:00', hB: '05:50', hC: '06:40', alexa: '06:00',
-    volChuva: '0.6', subida: '120', chave: '', chuvaMin: '60'
+    volChuva: '0.6', subida: '60', chave: '', chuvaMin: '60'
   };
   var cfg = lerJSON('cab-config') || {};
   for (var k in PADRAO) { if (!(k in cfg)) { cfg[k] = PADRAO[k]; } }
+  // v1.2: subida do alarme passa a ser de 1 minuto (pedido do Lucas)
+  if (!cfg.versaoCfg || cfg.versaoCfg < 2) { cfg.subida = '60'; cfg.versaoCfg = 2; gravarJSON('cab-config', cfg); }
   if (!cfg.chave) { try { cfg.chave = localStorage.getItem('tomtom-chave') || ''; } catch (e) {} } // chave da página de teste
   function salvarCfg() { gravarJSON('cab-config', cfg); }
 
@@ -323,6 +325,7 @@
       src.connect(ctx.destination);
       if (src.start) { src.start(0); } else { src.noteOn(0); }
       somLiberado = true;
+      manterSomVivo();
       atualizarNoite();
     } catch (e) {}
   }
@@ -331,6 +334,22 @@
   document.addEventListener('visibilitychange', function () {
     if (!document.hidden && ctx && ctx.state === 'suspended' && ctx.resume) { ctx.resume(); }
   });
+
+  // Um chiado baixíssimo (inaudível) tocando sempre. Sem ele, quando o som para,
+  // o iPad "solta" a caixa Bluetooth (Alexa) e o próximo som sai pelo próprio iPad.
+  // Também ajuda a manter o som liberado a noite toda.
+  var somVivo = null;
+  function manterSomVivo() {
+    if (somVivo || !ctx) { return; }
+    try {
+      var taxa = ctx.sampleRate, buf = ctx.createBuffer(1, taxa, taxa), d = buf.getChannelData(0);
+      for (var i = 0; i < d.length; i++) { d[i] = Math.random() * 2 - 1; }
+      var f = ctx.createBufferSource(), g = ctx.createGain();
+      f.buffer = buf; f.loop = true; g.gain.value = 0.0004;
+      f.connect(g); g.connect(ctx.destination); iniciar(f, 0);
+      somVivo = f;
+    } catch (e) {}
+  }
 
   function iniciar(fonte, t) { if (fonte.start) { fonte.start(t); } else { fonte.noteOn(t); } }
   function desligar(no) { try { no.disconnect(); } catch (e) {} }
@@ -431,12 +450,17 @@
     var g = chuva.ganho, f = chuva.fonte;
     chuva.ganho = chuva.fonte = null; chuva.fimEm = 0;
     $('bt-parar-chuva').style.display = 'none';
-    if (imediato) { desligar(g); desligar(f); return; }
+    if (imediato === true) { desligar(g); desligar(f); return; }
+    // Botão "Parar chuva": some em 1,5 s. Fim do timer: vai sumindo em 1 minuto.
+    var dur = imediato === 'rapido' ? 1.5 : 60;
     var t = ctx.currentTime;
-    g.gain.cancelScheduledValues(t);
-    g.gain.setValueAtTime(g.gain.value, t);
-    g.gain.linearRampToValueAtTime(0.0001, t + 60);   // vai sumindo em 1 minuto
-    setTimeout(function () { desligar(g); desligar(f); }, 61000);
+    try {
+      g.gain.cancelScheduledValues(0);
+      g.gain.setValueAtTime(parseFloat(cfg.volChuva), t);
+      g.gain.linearRampToValueAtTime(0.0001, t + dur);
+    } catch (e) {}
+    // Garantia: desliga de vez no fim, mesmo que o iPad ignore a rampa
+    setTimeout(function () { desligar(g); desligar(f); }, dur * 1000 + 100);
   }
 
   // ---------- Alarme ----------
@@ -448,7 +472,7 @@
     f.buffer = op === 'B' ? bufferAnimado() : bufferCarrilhao();
     f.loop = true;
     var t = ctx.currentTime, sub = parseInt(cfg.subida, 10);
-    g.gain.setValueAtTime(0.03, t);
+    g.gain.setValueAtTime(0.08, t);
     g.gain.linearRampToValueAtTime(1, t + sub);
     f.connect(g); g.connect(ctx.destination); iniciar(f, 0);
     alarmeSom.fonte = f; alarmeSom.ganho = g;
@@ -553,7 +577,7 @@
   }
 
   $('bt-boanoite').addEventListener('click', function () { abrirEscolha(); });
-  $('bt-parar-chuva').addEventListener('click', function () { pararChuva(false); atualizarNoite(); });
+  $('bt-parar-chuva').addEventListener('click', function () { pararChuva('rapido'); atualizarNoite(); });
   $('bt-clima-noite').addEventListener('click', function () {
     var agora = new Date();
     abrirPainel(null, agora.getHours() >= 15);   // à noite mostra o clima de amanhã
