@@ -2,290 +2,857 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="Cabeceira">
-<title>Cabeceira - Teste</title>
+<meta name="apple-mobile-web-app-title" content="Jarvis">
+<title>Jarvis</title>
 <style>
-  html, body { margin: 0; padding: 0; background: #000; color: #ddd;
-    font-family: -apple-system, Helvetica, Arial, sans-serif; }
-  body { padding: 20px; }
-  h1 { font-size: 26px; font-weight: 300; margin: 0 0 4px; }
-  .sub { color: #888; margin: 0 0 20px; font-size: 15px; }
-  #relogio { font-size: 96px; font-weight: 200; color: #c33; text-align: center;
-    letter-spacing: 2px; margin: 10px 0 20px; }
-  .teste { border: 1px solid #333; border-radius: 12px; padding: 14px 16px;
-    margin-bottom: 12px; overflow: hidden; }
-  .teste h2 { font-size: 19px; font-weight: 500; margin: 0 0 6px; }
-  .teste p { margin: 4px 0; font-size: 15px; color: #aaa; }
-  .status { float: right; font-size: 15px; font-weight: 600; padding: 4px 10px;
-    border-radius: 8px; background: #333; color: #ccc; }
-  .ok { background: #1e6b2e; color: #fff; }
-  .falha { background: #8a1f1f; color: #fff; }
-  .rodando { background: #7a5c00; color: #fff; }
-  button { font-size: 17px; padding: 10px 16px; margin: 8px 8px 0 0; border: 0;
-    border-radius: 10px; background: #2b4c7e; color: #fff; -webkit-appearance: none; }
-  button.cinza { background: #444; }
-  input { font-size: 17px; padding: 9px; width: 60%; border-radius: 8px;
-    border: 1px solid #555; background: #111; color: #fff; }
-  .resumo { font-size: 14px; color: #888; margin-top: 20px; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; height: 100%; background: #000; color: #ddd;
+    font-family: -apple-system, Helvetica, Arial, sans-serif; -webkit-user-select: none;
+    -webkit-touch-callout: none; overflow: hidden; }
+  .tela { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: none;
+    overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .tela.ativa { display: block; }
+  button { font-family: inherit; -webkit-appearance: none; border: 0; cursor: pointer; }
+
+  /* ---------- Noite ---------- */
+  #noite { background: #000; text-align: center; }
+  #n-relogio { color: #7a1414; font-size: 25vw; font-weight: 200; line-height: 1;
+    margin-top: 16vh; letter-spacing: -0.02em; }
+  #n-data { color: #4a0e0e; font-size: 3.4vw; margin-top: 1vh; }
+  #n-plano { color: #4a0e0e; font-size: 2.8vw; margin-top: 4vh; min-height: 3.5vw; }
+  #n-aviso { color: #a33; font-size: 2.6vw; margin-top: 2vh; display: none; }
+  #n-botoes { position: absolute; left: 0; right: 0; bottom: 6vh; }
+  .btn-noite { background: #140404; color: #6a1a1a; border: 1px solid #2a0808;
+    font-size: 2.6vw; padding: 1.6vw 3.4vw; border-radius: 3vw; margin: 0 1vw; }
+  #bt-engrenagem { position: absolute; top: 0; right: 0; width: 13vw; height: 13vw;
+    background: transparent; color: #1c0505; font-size: 3vw; }
+
+  /* ---------- Escolha ---------- */
+  #escolha { background: #050000; padding: 5vh 6vw; }
+  #escolha h1, #ajustes h1 { color: #8a2a2a; font-weight: 300; font-size: 4.2vw; margin: 0 0 3vh; }
+  .opcoes { display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; margin: -1vw; }
+  .opcao { width: 46%; margin: 1vw; padding: 3vw; text-align: left; background: #120303;
+    color: #9a3a3a; border: 1px solid #2a0a0a; border-radius: 2vw; }
+  .opcao b { display: block; font-size: 3.2vw; font-weight: 500; margin-bottom: 0.8vw; }
+  .opcao span { font-size: 2.2vw; color: #6a2424; }
+  .opcao.marcada { border-color: #a33; background: #220606; }
+  .linha-chuva { margin-top: 4vh; color: #7a2a2a; font-size: 2.4vw; }
+  .chip { background: #120303; color: #7a2a2a; border: 1px solid #2a0a0a; border-radius: 5vw;
+    padding: 1.2vw 2.6vw; margin: 1vw 0.6vw 0 0; font-size: 2.2vw; }
+  .chip.marcada { border-color: #a33; color: #c55; }
+  .acoes { margin-top: 4vh; }
+  .btn-principal { background: #5a1010; color: #f2c0c0; font-size: 3vw; padding: 2vw 5vw; border-radius: 2vw; }
+  .btn-sec { background: transparent; color: #6a2a2a; font-size: 2.6vw; padding: 2vw 3vw; }
+
+  /* ---------- Confirmação ---------- */
+  #confirmado { background: #000; text-align: center; padding: 14vh 8vw 0; }
+  #c-titulo { color: #9a3030; font-size: 4vw; font-weight: 300; }
+  #c-detalhe { color: #6a2020; font-size: 2.8vw; margin-top: 2vh; }
+  #c-alexa { color: #c06060; font-size: 3vw; margin: 5vh auto 0; max-width: 80vw;
+    border: 1px solid #3a0c0c; border-radius: 2vw; padding: 3vw; line-height: 1.4; }
+
+  /* ---------- Alarme ---------- */
+  #alarme { background: #000; text-align: center; -webkit-transition: background 120s linear; transition: background 120s linear; }
+  #alarme.claro { background: #c8742a; }
+  #a-relogio { font-size: 22vw; font-weight: 200; color: #fff; margin-top: 12vh; line-height: 1; }
+  #a-frase { font-size: 3.6vw; color: #fff; margin: 4vh 8vw 0; min-height: 5vw; line-height: 1.3; }
+  #bt-parar { margin-top: 7vh; background: rgba(255,255,255,0.9); color: #222; font-size: 4vw;
+    padding: 3vw 10vw; border-radius: 6vw; }
+
+  /* ---------- Painel (manhã / clima) ---------- */
+  #painel { background: #111214; color: #f2f2f2; padding: 4vh 5vw 6vh; }
+  #p-topo { display: -webkit-flex; display: flex; -webkit-justify-content: space-between; justify-content: space-between;
+    -webkit-align-items: baseline; align-items: baseline; }
+  #p-hora { font-size: 9vw; font-weight: 200; }
+  #p-dia { font-size: 2.4vw; color: #999; text-align: right; }
+  .cartao { background: #1d1e21; border-radius: 2.4vw; padding: 2.6vw 3vw; margin-top: 2.4vw; }
+  .cartao h2 { font-size: 2.1vw; text-transform: uppercase; letter-spacing: 0.08em; color: #8e8e93;
+    margin: 0 0 1.6vw; font-weight: 600; }
+  .periodos { display: -webkit-flex; display: flex; }
+  .periodo { -webkit-flex: 1; flex: 1; text-align: center; }
+  .periodo .nome { font-size: 2.2vw; color: #999; }
+  .periodo .temp { font-size: 6vw; font-weight: 200; margin: 0.6vw 0; }
+  .periodo .desc { font-size: 2vw; color: #bbb; }
+  .linha { font-size: 2.6vw; line-height: 1.5; }
+  .linha.alerta { color: #7fb7ff; }
+  .grande { font-size: 6vw; font-weight: 200; }
+  .pequeno { font-size: 2.1vw; color: #8e8e93; }
+  .btn-painel { background: #2c2d31; color: #4ea1ff; font-size: 2.4vw; padding: 1.6vw 3vw; border-radius: 1.6vw; margin: 2vw 1.4vw 0 0; }
+  #p-voltar { margin-top: 4vh; }
+
+  /* ---------- Ajustes ---------- */
+  #ajustes { background: #0a0a0a; color: #ccc; padding: 4vh 6vw 10vh; }
+  #ajustes h1 { color: #ddd; }
+  #ajustes h2 { font-size: 2.3vw; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.06em; margin: 4vh 0 1vh; }
+  .campo { margin: 1.6vw 0; }
+  .campo label { display: block; font-size: 2.2vw; color: #999; margin-bottom: 0.6vw; }
+  .campo input, .campo select { width: 100%; font-size: 2.6vw; padding: 1.4vw; border-radius: 1.2vw;
+    border: 1px solid #333; background: #151515; color: #fff; -webkit-user-select: text; }
+  .campo input[type=time] { width: 30vw; }
+  .achado { font-size: 2vw; color: #6c6; margin-top: 0.6vw; min-height: 2.4vw; }
+  .achado.erro { color: #e66; }
+  .horarios { display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; }
+  .horarios .campo { width: 33%; padding-right: 2vw; }
+  .horarios .campo input { width: 100%; }
+  #aj-msg { font-size: 2.4vw; color: #6c6; margin-top: 2vh; min-height: 3vw; }
+  .btn-aj { background: #2a4b7c; color: #fff; font-size: 2.6vw; padding: 1.8vw 4vw; border-radius: 1.6vw; margin: 2vw 1.6vw 0 0; }
+  .btn-aj.cinza { background: #333; }
+  #aj-versao { font-size: 1.8vw; color: #555; margin-top: 4vh; }
 </style>
 </head>
 <body>
-<h1>Cabeceira: página de teste</h1>
-<p class="sub">Toque nos botões na ordem. Ao final, tire um print desta tela e mande no chat.</p>
 
-<div id="relogio">--:--</div>
-
-<div class="teste">
-  <span class="status" id="st-relogio">aguardando</span>
-  <h2>1. Relógio</h2>
-  <p>Fica verde sozinho se os segundos estiverem andando.</p>
+<!-- Tela da noite: relógio -->
+<div id="noite" class="tela ativa">
+  <button id="bt-engrenagem" aria-label="Ajustes (segure 3 segundos)">&#9881;</button>
+  <div id="n-relogio">--:--</div>
+  <div id="n-data"></div>
+  <div id="n-plano"></div>
+  <div id="n-aviso">Toque na tela para ativar o som do alarme</div>
+  <div id="n-botoes">
+    <button class="btn-noite" id="bt-boanoite">Boa Noite, Jarvis</button>
+    <button class="btn-noite" id="bt-parar-chuva" style="display:none">Parar chuva</button>
+    <button class="btn-noite" id="bt-clima-noite">Clima</button>
+  </div>
 </div>
 
-<div class="teste">
-  <span class="status" id="st-chuva">aguardando</span>
-  <h2>2. Som de chuva</h2>
-  <p>Toque em Tocar. Deve ouvir chuva contínua, sem pausas. Se ouvir, toque em "Ouvi".</p>
-  <button id="bt-chuva">Tocar chuva</button>
-  <button id="bt-chuva-parar" class="cinza">Parar</button>
-  <button id="bt-chuva-ouvi" class="cinza">Ouvi</button>
-  <p id="msg-chuva"></p>
+<!-- Escolha da rotina -->
+<div id="escolha" class="tela">
+  <h1 id="e-titulo">Boa noite, Lucas. Como vai ser amanhã?</h1>
+  <div class="opcoes">
+    <button class="opcao" data-op="A"><b>Levar a Gabi</b><span id="e-sub-A"></span></button>
+    <button class="opcao" data-op="B"><b>Academia</b><span id="e-sub-B"></span></button>
+    <button class="opcao" data-op="C"><b>Direto para o trabalho</b><span id="e-sub-C"></span></button>
+    <button class="opcao" data-op="D"><b>Fim de semana</b><span>Sem alarme, só a previsão</span></button>
+  </div>
+  <div class="linha-chuva">Som de chuva:
+    <div>
+      <button class="chip" data-chuva="30">30 min</button>
+      <button class="chip" data-chuva="60">1 hora</button>
+      <button class="chip" data-chuva="90">1h30</button>
+      <button class="chip" data-chuva="0">A noite toda</button>
+      <button class="chip" data-chuva="-1">Sem chuva</button>
+    </div>
+  </div>
+  <div class="acoes">
+    <button class="btn-principal" id="bt-confirmar">Confirmar</button>
+    <button class="btn-sec" id="bt-cancelar-escolha">Voltar</button>
+  </div>
 </div>
 
-<div class="teste">
-  <span class="status" id="st-alarme">aguardando</span>
-  <h2>3. Alarme gradual</h2>
-  <p>Toque em Testar. Um bipe começa baixinho e sobe por 20 segundos. Se notar o som subindo, toque em "Subiu".</p>
-  <button id="bt-alarme">Testar alarme</button>
-  <button id="bt-alarme-parar" class="cinza">Parar</button>
-  <button id="bt-alarme-ouvi" class="cinza">Subiu</button>
+<!-- Confirmação com a frase para a Alexa -->
+<div id="confirmado" class="tela">
+  <div id="c-titulo"></div>
+  <div id="c-detalhe"></div>
+  <div id="c-alexa"></div>
+  <div class="acoes"><button class="btn-principal" id="bt-ok-confirmado">OK, boa noite</button></div>
 </div>
 
-<div class="teste">
-  <span class="status" id="st-clima">aguardando</span>
-  <h2>4. Clima de Santo André</h2>
-  <button id="bt-clima">Buscar clima</button>
-  <p id="msg-clima"></p>
+<!-- Alarme tocando -->
+<div id="alarme" class="tela">
+  <div id="a-relogio">--:--</div>
+  <div id="a-frase"></div>
+  <button id="bt-parar">Parar</button>
 </div>
 
-<div class="teste">
-  <span class="status" id="st-transito">aguardando</span>
-  <h2>5. Trânsito (TomTom)</h2>
-  <p>Cole a sua chave do TomTom. Ela fica guardada só neste iPad.</p>
-  <input id="chave" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="chave do TomTom">
-  <br><button id="bt-transito">Testar trânsito</button>
-  <p id="msg-transito"></p>
+<!-- Painel da manhã / clima -->
+<div id="painel" class="tela">
+  <div id="p-topo"><div id="p-hora">--:--</div><div id="p-dia"></div></div>
+  <div class="cartao" id="p-cartao-clima">
+    <h2 id="p-clima-titulo">Clima</h2>
+    <div class="periodos" id="p-periodos"><div class="linha">Carregando...</div></div>
+  </div>
+  <div class="cartao" id="p-cartao-chuva">
+    <h2>Chuva</h2>
+    <div id="p-chuva"><div class="linha">Carregando...</div></div>
+  </div>
+  <div class="cartao" id="p-cartao-rota" style="display:none">
+    <h2 id="p-rota-titulo">Trajeto</h2>
+    <div id="p-rota"><div class="linha">Carregando...</div></div>
+    <a id="p-mapas" href="#"><button class="btn-painel">Abrir no Mapas</button></a>
+  </div>
+  <div class="pequeno" id="p-atualizado" style="margin-top:2vw"></div>
+  <div id="p-voltar">
+    <button class="btn-painel" id="bt-atualizar">Atualizar</button>
+    <button class="btn-painel" id="bt-voltar-relogio">Voltar ao relógio</button>
+  </div>
 </div>
 
-<div class="teste">
-  <span class="status" id="st-offline">aguardando</span>
-  <h2>6. Funcionar sem internet</h2>
-  <p id="msg-offline">Verificando...</p>
-</div>
+<!-- Ajustes -->
+<div id="ajustes" class="tela">
+  <h1>Ajustes</h1>
 
-<p class="resumo" id="info"></p>
+  <h2>Endereços</h2>
+  <div class="campo"><label>Casa</label><input id="aj-casa" type="text" autocomplete="off" autocorrect="off" spellcheck="false"><div class="achado" id="ac-casa"></div></div>
+  <div class="campo"><label>Bar da Tilápia (deixar a Gabi)</label><input id="aj-bar" type="text" autocomplete="off" autocorrect="off" spellcheck="false"><div class="achado" id="ac-bar"></div></div>
+  <div class="campo"><label>Trabalho</label><input id="aj-trabalho" type="text" autocomplete="off" autocorrect="off" spellcheck="false"><div class="achado" id="ac-trabalho"></div></div>
+
+  <h2>Horários de alarme</h2>
+  <div class="horarios">
+    <div class="campo"><label>Levar a Gabi</label><input id="aj-hA" type="time"></div>
+    <div class="campo"><label>Academia</label><input id="aj-hB" type="time"></div>
+    <div class="campo"><label>Direto p/ trabalho</label><input id="aj-hC" type="time"></div>
+    <div class="campo"><label>Alarme fixo da Alexa (seg a sex)</label><input id="aj-alexa" type="time"></div>
+  </div>
+
+  <h2>Som</h2>
+  <div class="campo"><label>Volume da chuva</label>
+    <select id="aj-volchuva"><option value="0.35">Baixo</option><option value="0.6">Médio</option><option value="0.9">Alto</option></select></div>
+  <div class="campo"><label>Subida do alarme (de baixo até o máximo)</label>
+    <select id="aj-subida"><option value="60">1 minuto</option><option value="120">2 minutos</option><option value="180">3 minutos</option></select></div>
+
+  <h2>Trânsito</h2>
+  <div class="campo"><label>Chave do TomTom</label><input id="aj-chave" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+
+  <button class="btn-aj" id="bt-salvar">Salvar</button>
+  <button class="btn-aj cinza" id="bt-teste-alarme">Testar alarme em 2 minutos</button>
+  <button class="btn-aj cinza" id="bt-fechar-ajustes">Fechar</button>
+  <div id="aj-msg"></div>
+  <div id="aj-versao"></div>
+</div>
 
 <script>
 (function () {
   'use strict';
+  var VERSAO = '1.0 (05/11/2026)';
 
+  // ====================================================================
+  // Utilidades
+  // ====================================================================
   function $(id) { return document.getElementById(id); }
-  function marcar(id, estado, texto) {
-    var el = $(id);
-    el.className = 'status ' + estado;
-    el.textContent = texto;
+  function dd(n) { return n < 10 ? '0' + n : '' + n; }
+  function hhmm(d) { return dd(d.getHours()) + ':' + dd(d.getMinutes()); }
+  var DIAS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+  var MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  function dataExtenso(d) { return DIAS[d.getDay()] + ', ' + d.getDate() + ' de ' + MESES[d.getMonth()]; }
+  function diaUtil(d) { var w = d.getDay(); return w >= 1 && w <= 5; }
+  function chaveDia(d) { return d.getFullYear() + '-' + dd(d.getMonth() + 1) + '-' + dd(d.getDate()); }
+  function lerJSON(k) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+  function gravarJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function falado(h) { // "06:40" -> "6 e 40"; "06:00" -> "6"
+    var p = h.split(':'), hh = parseInt(p[0], 10), mm = parseInt(p[1], 10);
+    return mm === 0 ? '' + hh : hh + ' e ' + mm;
   }
-  function doisDigitos(n) { return n < 10 ? '0' + n : '' + n; }
-  function guardar(chave, valor) { try { localStorage.setItem(chave, valor); } catch (e) {} }
-  function ler(chave) { try { return localStorage.getItem(chave); } catch (e) { return null; } }
-
-  // Informações do aparelho, para eu saber o que está rodando
-  $('info').textContent = 'Aparelho: ' + navigator.userAgent;
-
-  // ---------- 1. Relógio ----------
-  var ultimoSegundo = -1, mudancas = 0;
-  function atualizarRelogio() {
-    var d = new Date();
-    $('relogio').textContent = doisDigitos(d.getHours()) + ':' + doisDigitos(d.getMinutes()) + ':' + doisDigitos(d.getSeconds());
-    if (d.getSeconds() !== ultimoSegundo) {
-      if (ultimoSegundo !== -1) { mudancas++; }
-      ultimoSegundo = d.getSeconds();
-      if (mudancas === 3) { marcar('st-relogio', 'ok', 'OK'); }
-    }
+  function proximaOcorrencia(h, agora) { // próxima vez que o relógio marca h (HH:MM)
+    var p = h.split(':'), d = new Date(agora.getTime());
+    d.setHours(parseInt(p[0], 10), parseInt(p[1], 10), 0, 0);
+    if (d.getTime() <= agora.getTime()) { d.setDate(d.getDate() + 1); }
+    return d;
   }
-  setInterval(atualizarRelogio, 250);
-  atualizarRelogio();
 
-  // ---------- Áudio (Web Audio) ----------
+  // ====================================================================
+  // Configurações (ficam só neste iPad)
+  // ====================================================================
+  var PADRAO = {
+    casa: 'Rua Apalaches, 332, Santo André, SP',
+    bar: 'Rua Visconde de Taunay, 90, Centro, Santo André, SP, 09210-570',
+    trabalho: 'Rua Maria da Conceição Stanwez, 162, São Paulo, SP',
+    pos: {},           // coordenadas encontradas para cada endereço
+    hA: '06:00', hB: '05:50', hC: '06:40', alexa: '06:00',
+    volChuva: '0.6', subida: '120', chave: '', chuvaMin: '60'
+  };
+  var cfg = lerJSON('cab-config') || {};
+  for (var k in PADRAO) { if (!(k in cfg)) { cfg[k] = PADRAO[k]; } }
+  if (!cfg.chave) { try { cfg.chave = localStorage.getItem('tomtom-chave') || ''; } catch (e) {} } // chave da página de teste
+  function salvarCfg() { gravarJSON('cab-config', cfg); }
+
+  var OPCOES = {
+    A: { nome: 'Levar a Gabi', hora: function () { return cfg.hA; }, rota: ['casa', 'bar', 'trabalho'] },
+    B: { nome: 'Academia', hora: function () { return cfg.hB; }, rota: null },
+    C: { nome: 'Direto para o trabalho', hora: function () { return cfg.hC; }, rota: ['casa', 'trabalho'] },
+    D: { nome: 'Fim de semana', hora: function () { return null; }, rota: null }
+  };
+
+  // Plano escolhido à noite: { op, alarmeEm (ms), diaAlvo, status: 'agendado'|'tocando'|'feito' }
+  var plano = lerJSON('cab-plano');
+  function salvarPlano() { gravarJSON('cab-plano', plano); }
+
+  // ====================================================================
+  // Telas
+  // ====================================================================
+  var telaAtual = 'noite';
+  function mostrar(id) {
+    var telas = document.querySelectorAll('.tela');
+    for (var i = 0; i < telas.length; i++) { telas[i].className = 'tela'; }
+    $(id).className = 'tela ativa';
+    telaAtual = id;
+  }
+
+  // ====================================================================
+  // Áudio. O iPad só libera som depois de um toque na tela.
+  // Para parar um som, desligamos o "fio" (disconnect) e zeramos o volume:
+  // no iOS 12 o comando stop() às vezes é ignorado.
+  // ====================================================================
   var Ctx = window.AudioContext || window.webkitAudioContext;
-  var ctx = null;
-  function obterAudio() {
-    if (!Ctx) { return null; }
-    if (!ctx) { ctx = new Ctx(); }
-    if (ctx.state === 'suspended' && ctx.resume) { ctx.resume(); }
-    // Truque do iOS: tocar um som vazio dentro do toque libera o áudio
-    var vazio = ctx.createBuffer(1, 1, 22050);
-    var src = ctx.createBufferSource();
-    src.buffer = vazio;
-    src.connect(ctx.destination);
-    if (src.start) { src.start(0); } else { src.noteOn(0); }
-    return ctx;
+  var ctx = null, somLiberado = false;
+  function liberarSom() {
+    if (!Ctx) { return; }
+    try {
+      if (!ctx) { ctx = new Ctx(); }
+      if (ctx.state === 'suspended' && ctx.resume) { ctx.resume(); }
+      var src = ctx.createBufferSource();
+      src.buffer = ctx.createBuffer(1, 1, 22050);
+      src.connect(ctx.destination);
+      if (src.start) { src.start(0); } else { src.noteOn(0); }
+      somLiberado = true;
+      atualizarNoite();
+    } catch (e) {}
   }
+  document.addEventListener('touchend', liberarSom, false);
+  document.addEventListener('click', liberarSom, false);
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && ctx && ctx.state === 'suspended' && ctx.resume) { ctx.resume(); }
+  });
 
-  // ---------- 2. Chuva (ruído gerado, repete sem pausa) ----------
-  var chuvaFonte = null, chuvaGanho = null;
-  function criarChuva(c) {
-    var segundos = 6, taxa = c.sampleRate;
-    var buf = c.createBuffer(2, segundos * taxa, taxa);
-    for (var canal = 0; canal < 2; canal++) {
-      var dados = buf.getChannelData(canal), ultimo = 0;
-      for (var i = 0; i < dados.length; i++) {
-        var branco = Math.random() * 2 - 1;
-        ultimo = (ultimo + 0.02 * branco) / 1.02;   // ruído "marrom", grave como chuva
-        var gota = Math.random() < 0.0004 ? (Math.random() * 2 - 1) * 0.3 : 0;
-        dados[i] = ultimo * 3.2 + gota * 0.25 + branco * 0.04;
-      }
-      // emenda suave entre o fim e o começo
-      var emenda = Math.floor(taxa * 0.05);
-      for (var j = 0; j < emenda; j++) {
-        var f = j / emenda;
-        dados[dados.length - emenda + j] = dados[dados.length - emenda + j] * (1 - f) + dados[j] * f;
-      }
-    }
+  function iniciar(fonte, t) { if (fonte.start) { fonte.start(t); } else { fonte.noteOn(t); } }
+  function desligar(no) { try { no.disconnect(); } catch (e) {} }
+
+  // Gera um trecho de áudio que se repete sem emenda
+  function gerarBuffer(segundos, preencher) {
+    var taxa = ctx.sampleRate, n = Math.floor(segundos * taxa);
+    var buf = ctx.createBuffer(2, n, taxa);
+    preencher(buf.getChannelData(0), buf.getChannelData(1), taxa, n);
     return buf;
   }
-  $('bt-chuva').addEventListener('click', function () {
-    var c = obterAudio();
-    if (!c) { marcar('st-chuva', 'falha', 'FALHOU'); $('msg-chuva').textContent = 'Este navegador não tem Web Audio.'; return; }
-    pararChuva();
-    chuvaFonte = c.createBufferSource();
-    chuvaFonte.buffer = criarChuva(c);
-    chuvaFonte.loop = true;
-    chuvaGanho = c.createGain();
-    chuvaGanho.gain.setValueAtTime(0.0001, c.currentTime);
-    chuvaGanho.gain.linearRampToValueAtTime(0.8, c.currentTime + 3);
-    chuvaFonte.connect(chuvaGanho);
-    chuvaGanho.connect(c.destination);
-    if (chuvaFonte.start) { chuvaFonte.start(0); } else { chuvaFonte.noteOn(0); }
-    marcar('st-chuva', 'rodando', 'tocando');
-    $('msg-chuva').textContent = 'Se não ouvir nada: confira a chave lateral do iPad e o volume.';
-  });
-  function pararChuva() {
-    if (chuvaFonte) { try { chuvaFonte.stop(0); } catch (e) {} chuvaFonte = null; }
-  }
-  $('bt-chuva-parar').addEventListener('click', pararChuva);
-  $('bt-chuva-ouvi').addEventListener('click', function () {
-    marcar('st-chuva', 'ok', 'OK'); guardar('teste-chuva', 'ok');
-  });
 
-  // ---------- 3. Alarme gradual ----------
-  var alarmeOsc = null, alarmeGanho = null, alarmeBipe = null;
-  $('bt-alarme').addEventListener('click', function () {
-    var c = obterAudio();
-    if (!c) { marcar('st-alarme', 'falha', 'FALHOU'); return; }
-    pararAlarme();
-    alarmeOsc = c.createOscillator();
-    alarmeOsc.type = 'sine';
-    alarmeOsc.frequency.value = 880;
-    alarmeBipe = c.createGain();     // liga e desliga (bipe)
-    alarmeGanho = c.createGain();    // volume que sobe devagar
-    var t = c.currentTime;
-    alarmeBipe.gain.setValueAtTime(0, t);
-    for (var k = 0; k < 40; k++) {
-      alarmeBipe.gain.setValueAtTime(1, t + k * 0.5);
-      alarmeBipe.gain.setValueAtTime(0, t + k * 0.5 + 0.25);
+  var cacheBuffers = {};
+  function bufferChuva() {
+    if (cacheBuffers.chuva) { return cacheBuffers.chuva; }
+    cacheBuffers.chuva = gerarBuffer(8, function (L, R, taxa, n) {
+      var canais = [L, R];
+      for (var c = 0; c < 2; c++) {
+        var d = canais[c], ultimo = 0;
+        for (var i = 0; i < n; i++) {
+          var b = Math.random() * 2 - 1;
+          ultimo = (ultimo + 0.02 * b) / 1.02;
+          var gota = Math.random() < 0.0004 ? (Math.random() * 2 - 1) * 0.3 : 0;
+          d[i] = ultimo * 3.2 + gota * 0.25 + b * 0.04;
+        }
+        var em = Math.floor(taxa * 0.08);
+        for (var j = 0; j < em; j++) { var f = j / em; d[n - em + j] = d[n - em + j] * (1 - f) + d[j] * f; }
+      }
+    });
+    return cacheBuffers.chuva;
+  }
+
+  // Alarme suave: carrilhão de 3 notas a cada 2,5 s
+  function bufferCarrilhao() {
+    if (cacheBuffers.carrilhao) { return cacheBuffers.carrilhao; }
+    cacheBuffers.carrilhao = gerarBuffer(2.5, function (L, R, taxa, n) {
+      var notas = [[0, 659.25], [0.28, 830.61], [0.56, 987.77]];
+      for (var i = 0; i < n; i++) {
+        var t = i / taxa, v = 0;
+        for (var k = 0; k < notas.length; k++) {
+          var dt = t - notas[k][0];
+          if (dt >= 0) {
+            var env = Math.exp(-dt * 2.2) * Math.min(1, dt * 200);
+            v += env * (Math.sin(2 * Math.PI * notas[k][1] * dt) * 0.6 + Math.sin(2 * Math.PI * notas[k][1] * 2 * dt) * 0.15);
+          }
+        }
+        L[i] = R[i] = v * 0.45;
+      }
+    });
+    return cacheBuffers.carrilhao;
+  }
+
+  // Academia: batida animada (128 bpm) com baixo e chimbal
+  function bufferAnimado() {
+    if (cacheBuffers.animado) { return cacheBuffers.animado; }
+    var bpm = 128, batida = 60 / bpm, compassos = 4;
+    cacheBuffers.animado = gerarBuffer(batida * 4 * compassos, function (L, R, taxa, n) {
+      var baixo = [110, 110, 130.81, 146.83];       // Lá, Lá, Dó, Ré
+      var melodia = [440, 523.25, 659.25, 587.33, 523.25, 659.25, 783.99, 659.25];
+      for (var i = 0; i < n; i++) {
+        var t = i / taxa, v = 0;
+        var posBatida = t / batida, nb = Math.floor(posBatida), fb = (posBatida - nb) * batida;
+        // bumbo em toda batida
+        v += Math.sin(2 * Math.PI * (55 + 90 * Math.exp(-fb * 30)) * fb) * Math.exp(-fb * 9) * 0.9;
+        // chimbal no contratempo
+        var meio = t - (nb + 0.5) * batida;
+        if (meio >= 0 && meio < 0.06) { v += (Math.random() * 2 - 1) * Math.exp(-meio * 60) * 0.25; }
+        // baixo em colcheias
+        var col = Math.floor(posBatida * 2), fc = t - col * batida / 2;
+        var fBaixo = baixo[Math.floor(nb / 4) % 4];
+        v += (Math.sin(2 * Math.PI * fBaixo * fc) > 0 ? 1 : -1) * Math.exp(-fc * 6) * 0.12;
+        // melodia
+        var fMel = melodia[col % 8];
+        v += Math.sin(2 * Math.PI * fMel * fc) * Math.exp(-fc * 5) * 0.22;
+        L[i] = R[i] = v * 0.55;
+      }
+    });
+    return cacheBuffers.animado;
+  }
+
+  // ---------- Chuva ----------
+  var chuva = { fonte: null, ganho: null, fimEm: 0 };
+  function tocarChuva(minutos) {
+    if (!ctx) { return; }
+    pararChuva(true);
+    var g = ctx.createGain(), f = ctx.createBufferSource();
+    f.buffer = bufferChuva(); f.loop = true;
+    var t = ctx.currentTime, vol = parseFloat(cfg.volChuva);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + 5);
+    f.connect(g); g.connect(ctx.destination); iniciar(f, 0);
+    chuva.fonte = f; chuva.ganho = g;
+    chuva.fimEm = minutos > 0 ? Date.now() + minutos * 60000 : 0;
+    $('bt-parar-chuva').style.display = '';
+  }
+  function pararChuva(imediato) {
+    if (!chuva.ganho) { return; }
+    var g = chuva.ganho, f = chuva.fonte;
+    chuva.ganho = chuva.fonte = null; chuva.fimEm = 0;
+    $('bt-parar-chuva').style.display = 'none';
+    if (imediato) { desligar(g); desligar(f); return; }
+    var t = ctx.currentTime;
+    g.gain.cancelScheduledValues(t);
+    g.gain.setValueAtTime(g.gain.value, t);
+    g.gain.linearRampToValueAtTime(0.0001, t + 60);   // vai sumindo em 1 minuto
+    setTimeout(function () { desligar(g); desligar(f); }, 61000);
+  }
+
+  // ---------- Alarme ----------
+  var alarmeSom = { fonte: null, ganho: null };
+  function tocarAlarmeSom(op) {
+    if (!ctx) { return false; }
+    pararAlarmeSom();
+    var g = ctx.createGain(), f = ctx.createBufferSource();
+    f.buffer = op === 'B' ? bufferAnimado() : bufferCarrilhao();
+    f.loop = true;
+    var t = ctx.currentTime, sub = parseInt(cfg.subida, 10);
+    g.gain.setValueAtTime(0.03, t);
+    g.gain.linearRampToValueAtTime(1, t + sub);
+    f.connect(g); g.connect(ctx.destination); iniciar(f, 0);
+    alarmeSom.fonte = f; alarmeSom.ganho = g;
+    return true;
+  }
+  function pararAlarmeSom() {
+    if (alarmeSom.ganho) {
+      try { alarmeSom.ganho.gain.cancelScheduledValues(0); alarmeSom.ganho.gain.value = 0; } catch (e) {}
+      desligar(alarmeSom.ganho);
     }
-    alarmeGanho.gain.setValueAtTime(0.02, t);
-    alarmeGanho.gain.linearRampToValueAtTime(0.9, t + 20);
-    alarmeOsc.connect(alarmeBipe);
-    alarmeBipe.connect(alarmeGanho);
-    alarmeGanho.connect(c.destination);
-    if (alarmeOsc.start) { alarmeOsc.start(t); alarmeOsc.stop(t + 20); } else { alarmeOsc.noteOn(t); alarmeOsc.noteOff(t + 20); }
-    marcar('st-alarme', 'rodando', 'tocando');
-  });
-  function pararAlarme() {
-    if (alarmeOsc) { try { alarmeOsc.stop(0); } catch (e) {} alarmeOsc = null; }
+    if (alarmeSom.fonte) { desligar(alarmeSom.fonte); }
+    alarmeSom.fonte = alarmeSom.ganho = null;
   }
-  $('bt-alarme-parar').addEventListener('click', pararAlarme);
-  $('bt-alarme-ouvi').addEventListener('click', function () {
-    pararAlarme(); marcar('st-alarme', 'ok', 'OK'); guardar('teste-alarme', 'ok');
+
+  var FRASES = [
+    'Disciplina é fazer o que precisa ser feito, mesmo sem vontade.',
+    'O treino de hoje é a energia de amanhã. Bora!',
+    'Ninguém se arrepende de ter ido treinar.',
+    'Um passo de cada vez. O primeiro é levantar.',
+    'Você já venceu a preguiça antes. Vence de novo hoje.',
+    'Corpo forte, cabeça leve. Vamos nessa!',
+    'Constância vale mais que intensidade.',
+    'O dia começa agora, e começa bem.'
+  ];
+
+  var autoDesligar = null;
+  function dispararAlarme() {
+    if (!plano) { return; }
+    plano.status = 'tocando'; salvarPlano();
+    pararChuva(true);
+    var op = plano.op;
+    $('a-frase').textContent = op === 'B'
+      ? FRASES[Math.floor(Math.random() * FRASES.length)]
+      : 'Bom dia! ' + (OPCOES[op] ? OPCOES[op].nome : '');
+    var tocou = tocarAlarmeSom(op);
+    if (!tocou || !somLiberado) { $('a-frase').textContent += ' (o som do iPad não estava ativado; conte com a Alexa)'; }
+    mostrar('alarme');
+    $('alarme').className = 'tela ativa';
+    setTimeout(function () { $('alarme').className = 'tela ativa claro'; }, 50);  // tela clareia aos poucos
+    buscarDados(op);   // atualiza clima e trânsito enquanto toca
+    clearTimeout(autoDesligar);
+    autoDesligar = setTimeout(pararAlarme, 15 * 60000); // desliga sozinho após 15 min
+  }
+  function pararAlarme() {
+    clearTimeout(autoDesligar);
+    pararAlarmeSom();
+    if (plano) { plano.status = 'feito'; salvarPlano(); }
+    abrirPainel(plano ? plano.op : null, false);
+  }
+  $('bt-parar').addEventListener('click', pararAlarme);
+
+  // ====================================================================
+  // Tela da noite
+  // ====================================================================
+  function atualizarNoite() {
+    var agora = new Date();
+    $('n-relogio').textContent = hhmm(agora);
+    $('n-data').textContent = dataExtenso(agora);
+    var txt = '';
+    if (plano && plano.status === 'agendado' && plano.op !== 'D') {
+      var a = new Date(plano.alarmeEm);
+      txt = 'Alarme ' + hhmm(a) + ' · ' + OPCOES[plano.op].nome;
+    } else if (plano && plano.op === 'D' && plano.status === 'agendado') {
+      txt = 'Sem alarme · Fim de semana';
+    }
+    $('n-plano').textContent = txt;
+    var precisaToque = plano && plano.status === 'agendado' && plano.op !== 'D' && !somLiberado;
+    $('n-aviso').style.display = precisaToque ? 'block' : 'none';
+  }
+
+  $('bt-boanoite').addEventListener('click', function () { abrirEscolha(); });
+  $('bt-parar-chuva').addEventListener('click', function () { pararChuva(false); });
+  $('bt-clima-noite').addEventListener('click', function () {
+    var agora = new Date();
+    abrirPainel(null, agora.getHours() >= 15);   // à noite mostra o clima de amanhã
   });
 
-  // ---------- Requisições (XMLHttpRequest funciona em qualquer Safari) ----------
-  function buscar(url, sucesso, erro) {
+  // Engrenagem: segurar 3 segundos para abrir os ajustes
+  var seguraTimer = null;
+  function comecaSegurar(e) { if (e) { e.preventDefault(); } seguraTimer = setTimeout(abrirAjustes, 3000); }
+  function paraSegurar() { clearTimeout(seguraTimer); }
+  $('bt-engrenagem').addEventListener('touchstart', comecaSegurar, false);
+  $('bt-engrenagem').addEventListener('touchend', paraSegurar, false);
+  $('bt-engrenagem').addEventListener('mousedown', function () { comecaSegurar(); }, false);
+  $('bt-engrenagem').addEventListener('mouseup', paraSegurar, false);
+
+  // ====================================================================
+  // Escolha da rotina
+  // ====================================================================
+  var escolhaOp = null, escolhaChuva = null;
+  function marcarBotoes(sel, attr, valor) {
+    var bs = document.querySelectorAll(sel);
+    for (var i = 0; i < bs.length; i++) {
+      var base = bs[i].className.replace(' marcada', '');
+      bs[i].className = bs[i].getAttribute(attr) === valor ? base + ' marcada' : base;
+    }
+  }
+  function abrirEscolha() {
+    var agora = new Date();
+    $('e-sub-A').textContent = 'Alarme ' + cfg.hA + ' · trajeto pelo Bar da Tilápia';
+    $('e-sub-B').textContent = 'Alarme ' + cfg.hB + ' · música animada';
+    $('e-sub-C').textContent = 'Alarme ' + cfg.hC + ' · trajeto até o trabalho';
+    var amanha = new Date(agora.getTime()); if (agora.getHours() >= 12) { amanha.setDate(amanha.getDate() + 1); }
+    escolhaOp = diaUtil(amanha) ? 'C' : 'D';
+    escolhaChuva = cfg.chuvaMin;
+    marcarBotoes('.opcao', 'data-op', escolhaOp);
+    marcarBotoes('.chip', 'data-chuva', escolhaChuva);
+    mostrar('escolha');
+  }
+  var ops = document.querySelectorAll('.opcao');
+  for (var i = 0; i < ops.length; i++) {
+    ops[i].addEventListener('click', function () { escolhaOp = this.getAttribute('data-op'); marcarBotoes('.opcao', 'data-op', escolhaOp); });
+  }
+  var chips = document.querySelectorAll('.chip');
+  for (var j = 0; j < chips.length; j++) {
+    chips[j].addEventListener('click', function () { escolhaChuva = this.getAttribute('data-chuva'); marcarBotoes('.chip', 'data-chuva', escolhaChuva); });
+  }
+  $('bt-cancelar-escolha').addEventListener('click', function () { mostrar('noite'); atualizarNoite(); });
+
+  // Frase que a Alexa precisa ouvir para o alarme dela bater com a rotina
+  function fraseAlexa(op, quando) {
+    var fixo = cfg.alexa, util = diaUtil(quando);
+    var horaOp = OPCOES[op].hora();
+    if (op === 'D') {
+      return util ? 'Diga: "Alexa, cancele o alarme de amanhã às ' + falado(fixo) + '".' : 'Nada a dizer para a Alexa. Bom descanso!';
+    }
+    if (util && horaOp === fixo) { return 'A Alexa já vai tocar às ' + falado(fixo) + ' (alarme fixo). Nada a dizer.'; }
+    if (util) {
+      if (horaOp > fixo) {
+        return 'Diga: "Alexa, cancele o alarme de amanhã às ' + falado(fixo) + '". Depois: "Alexa, me acorde às ' + falado(horaOp) + '".';
+      }
+      return 'Diga: "Alexa, me acorde às ' + falado(horaOp) + '". O alarme fixo das ' + falado(fixo) + ' toca depois, como reforço.';
+    }
+    return 'Diga: "Alexa, me acorde às ' + falado(horaOp) + '".';
+  }
+
+  $('bt-confirmar').addEventListener('click', function () {
+    liberarSom();
+    var agora = new Date(), op = escolhaOp;
+    var h = OPCOES[op].hora();
+    var alvo = h ? proximaOcorrencia(h, agora) : (function () { var d = new Date(agora.getTime()); if (agora.getHours() >= 12) { d.setDate(d.getDate() + 1); } return d; })();
+    plano = { op: op, alarmeEm: h ? alvo.getTime() : 0, diaAlvo: chaveDia(alvo), status: 'agendado', buscouDados: false };
+    salvarPlano();
+    cfg.chuvaMin = escolhaChuva; salvarCfg();
+    var min = parseInt(escolhaChuva, 10);
+    if (min >= 0) { tocarChuva(min); } else { pararChuva(true); }
+
+    $('c-titulo').textContent = OPCOES[op].nome;
+    $('c-detalhe').textContent = h ? 'Alarme do iPad: ' + DIAS[alvo.getDay()] + ' às ' + h : 'Sem alarme amanhã';
+    $('c-alexa').textContent = fraseAlexa(op, alvo);
+    mostrar('confirmado');
+    if (op === 'D') { buscarDados('D'); }
+  });
+  $('bt-ok-confirmado').addEventListener('click', function () { mostrar('noite'); atualizarNoite(); });
+
+  // ====================================================================
+  // Clima (Open-Meteo, gratuito) e trânsito (TomTom)
+  // ====================================================================
+  function buscar(url, ok, erro) {
     var x = new XMLHttpRequest();
     x.open('GET', url, true);
     x.timeout = 15000;
     x.onload = function () {
-      if (x.status >= 200 && x.status < 300) {
-        try { sucesso(JSON.parse(x.responseText)); } catch (e) { erro('resposta inválida'); }
-      } else { erro('código ' + x.status); }
+      if (x.status >= 200 && x.status < 300) { try { ok(JSON.parse(x.responseText)); } catch (e) { erro('resposta inválida'); } }
+      else { erro('erro ' + x.status); }
     };
-    x.onerror = function () { erro('sem conexão ou certificado recusado'); };
+    x.onerror = function () { erro('sem internet'); };
     x.ontimeout = function () { erro('demorou demais'); };
     x.send();
   }
 
-  // ---------- 4. Clima ----------
-  $('bt-clima').addEventListener('click', function () {
-    marcar('st-clima', 'rodando', 'buscando');
-    $('msg-clima').textContent = '';
-    var url = 'https://api.open-meteo.com/v1/forecast?latitude=-23.66&longitude=-46.53' +
-      '&hourly=temperature_2m,precipitation_probability,precipitation&forecast_days=1&timezone=America%2FSao_Paulo';
-    buscar(url, function (d) {
-      var h = d.hourly, agora = new Date().getHours();
-      var temp = h.temperature_2m[agora], chuva = h.precipitation_probability[agora];
-      $('msg-clima').textContent = 'Agora: ' + Math.round(temp) + '°C, chance de chuva ' + chuva + '%.';
-      marcar('st-clima', 'ok', 'OK');
-    }, function (motivo) {
-      $('msg-clima').textContent = 'Falhou: ' + motivo + '.';
-      marcar('st-clima', 'falha', 'FALHOU');
-    });
-  });
+  var CODIGOS = {
+    0: 'Céu limpo', 1: 'Poucas nuvens', 2: 'Parcialmente nublado', 3: 'Nublado', 45: 'Neblina', 48: 'Neblina',
+    51: 'Garoa fraca', 53: 'Garoa', 55: 'Garoa forte', 56: 'Garoa', 57: 'Garoa',
+    61: 'Chuva fraca', 63: 'Chuva', 65: 'Chuva forte', 66: 'Chuva', 67: 'Chuva forte',
+    80: 'Pancadas fracas', 81: 'Pancadas de chuva', 82: 'Pancadas fortes', 95: 'Trovoadas', 96: 'Trovoadas', 99: 'Trovoadas fortes'
+  };
+  function intensidade(mm) { return mm >= 4 ? 'forte' : (mm >= 1 ? 'moderada' : 'fraca'); }
 
-  // ---------- 5. Trânsito ----------
-  var chaveSalva = ler('tomtom-chave');
-  if (chaveSalva) { $('chave').value = chaveSalva; }
-  $('bt-transito').addEventListener('click', function () {
-    var chave = $('chave').value.replace(/\s/g, '');
-    if (!chave) { $('msg-transito').textContent = 'Cole a chave primeiro.'; return; }
-    guardar('tomtom-chave', chave);
-    marcar('st-transito', 'rodando', 'buscando');
-    $('msg-transito').textContent = '';
-    // Trajeto genérico de teste: centro de Santo André até o centro de São Paulo
-    var url = 'https://api.tomtom.com/routing/1/calculateRoute/-23.6545,-46.5320:-23.5505,-46.6333/json' +
-      '?traffic=true&travelMode=car&key=' + encodeURIComponent(chave);
-    buscar(url, function (d) {
-      var r = d.routes[0].summary;
-      var min = Math.round(r.travelTimeInSeconds / 60), atraso = Math.round((r.trafficDelayInSeconds || 0) / 60);
-      $('msg-transito').textContent = 'Santo André até o centro de SP agora: ' + min + ' min (' + atraso + ' min de atraso por trânsito).';
-      marcar('st-transito', 'ok', 'OK');
-    }, function (motivo) {
-      $('msg-transito').textContent = 'Falhou: ' + motivo + '. Confira se a chave foi colada inteira.';
-      marcar('st-transito', 'falha', 'FALHOU');
-    });
-  });
+  var dados = lerJSON('cab-dados') || {};   // última resposta guardada (serve sem internet)
 
-  // ---------- 6. Sem internet (service worker) ----------
-  if (!('serviceWorker' in navigator)) {
-    marcar('st-offline', 'falha', 'FALHOU');
-    $('msg-offline').textContent = 'Este Safari não consegue guardar a página para uso sem internet.';
-  } else {
-    navigator.serviceWorker.register('sw.js').then(function () {
-      if (!navigator.onLine) {
-        marcar('st-offline', 'ok', 'OK');
-        $('msg-offline').textContent = 'A página abriu sem internet. Funcionou! Pode religar o Wi-Fi.';
-      } else {
-        marcar('st-offline', 'rodando', 'falta 1 passo');
-        $('msg-offline').textContent = 'Página guardada. Para confirmar: feche o Safari, desligue o Wi-Fi, abra esta página de novo e veja se fica verde.';
-      }
-    }, function () {
-      marcar('st-offline', 'falha', 'FALHOU');
-      $('msg-offline').textContent = 'Não consegui guardar a página no iPad.';
-    });
+  function coordenadaClima() {
+    var p = cfg.pos && cfg.pos.casa;
+    return p ? p : { lat: -23.66, lon: -46.53 };   // centro de Santo André
   }
+
+  function buscarClima(pronto) {
+    var c = coordenadaClima();
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + c.lat + '&longitude=' + c.lon +
+      '&hourly=temperature_2m,precipitation_probability,precipitation,weather_code' +
+      '&daily=temperature_2m_max,temperature_2m_min&forecast_days=2&timezone=America%2FSao_Paulo';
+    buscar(url, function (d) { dados.clima = d; dados.climaEm = Date.now(); gravarJSON('cab-dados', dados); pronto(); },
+      function (m) { dados.climaErro = m; pronto(); });
+  }
+
+  function buscarRota(op, pronto) {
+    var o = OPCOES[op];
+    if (!o || !o.rota) { pronto(); return; }
+    if (!cfg.chave) { dados.rotaErro = 'falta a chave do TomTom nos Ajustes'; pronto(); return; }
+    var pts = [];
+    for (var i = 0; i < o.rota.length; i++) {
+      var p = cfg.pos && cfg.pos[o.rota[i]];
+      if (!p) { dados.rotaErro = 'endereço "' + o.rota[i] + '" não encontrado; confira nos Ajustes'; pronto(); return; }
+      pts.push(p.lat + ',' + p.lon);
+    }
+    var url = 'https://api.tomtom.com/routing/1/calculateRoute/' + pts.join(':') +
+      '/json?traffic=true&travelMode=car&departAt=now&routeType=fastest&key=' + encodeURIComponent(cfg.chave);
+    buscar(url, function (d) {
+      var r = d.routes[0], pernas = [];
+      for (var k = 0; k < r.legs.length; k++) { pernas.push(r.legs[k].summary.travelTimeInSeconds); }
+      dados.rota = { op: op, total: r.summary.travelTimeInSeconds, atraso: r.summary.trafficDelayInSeconds || 0,
+        km: r.summary.lengthInMeters / 1000, pernas: pernas, em: Date.now() };
+      dados.rotaErro = null; gravarJSON('cab-dados', dados); pronto();
+    }, function (m) { dados.rotaErro = m; pronto(); });
+  }
+
+  function buscarDados(op, depois) {
+    var faltam = 2;
+    function um() { faltam--; if (faltam === 0) { if (telaAtual === 'painel') { desenharPainel(); } if (depois) { depois(); } } }
+    dados.climaErro = null;
+    buscarClima(um); buscarRota(op, um);
+  }
+
+  // ====================================================================
+  // Painel da manhã
+  // ====================================================================
+  var painelOp = null, painelAmanha = false;
+  function abrirPainel(op, amanha) {
+    painelOp = op; painelAmanha = amanha;
+    mostrar('painel');
+    desenharPainel();
+    buscarDados(op);
+  }
+
+  function media(lista) { var s = 0; for (var i = 0; i < lista.length; i++) { s += lista[i]; } return lista.length ? s / lista.length : null; }
+  function maisComum(lista) {
+    var cont = {}, melhor = null, max = 0;
+    for (var i = 0; i < lista.length; i++) {
+      var c = lista[i]; cont[c] = (cont[c] || 0) + 1;
+      // chuva conta mais que nuvem, para não esconder um período chuvoso
+      var peso = cont[c] + (c >= 51 ? 0.5 : 0);
+      if (peso > max) { max = peso; melhor = c; }
+    }
+    return melhor;
+  }
+
+  function desenharPainel() {
+    var agora = new Date();
+    $('p-hora').textContent = hhmm(agora);
+    var dia = new Date(agora.getTime()); if (painelAmanha) { dia.setDate(dia.getDate() + 1); }
+    $('p-dia').innerHTML = (painelAmanha ? 'Previsão para amanhã<br>' : '') + dataExtenso(dia);
+    var alvo = chaveDia(dia);
+
+    // ---- Clima ----
+    var c = dados.clima;
+    if (c && c.hourly) {
+      var H = c.hourly, periodos = [['Manhã', 6, 11], ['Almoço', 11, 14], ['Tarde', 14, 18], ['Noite', 18, 22]];
+      var html = '', alertas = [], blocoAtual = null;
+      for (var p = 0; p < periodos.length; p++) {
+        var temps = [], cods = [], probs = [];
+        for (var i = 0; i < H.time.length; i++) {
+          if (H.time[i].substr(0, 10) !== alvo) { continue; }
+          var hr = parseInt(H.time[i].substr(11, 2), 10);
+          if (hr >= periodos[p][1] && hr < periodos[p][2]) { temps.push(H.temperature_2m[i]); cods.push(H.weather_code[i]); probs.push(H.precipitation_probability[i] || 0); }
+        }
+        var m = media(temps);
+        html += '<div class="periodo"><div class="nome">' + periodos[p][0] + '</div><div class="temp">' +
+          (m === null ? '--' : Math.round(m) + '°') + '</div><div class="desc">' + (CODIGOS[maisComum(cods)] || '') +
+          '<br>' + (probs.length ? 'chuva ' + Math.max.apply(null, probs) + '%' : '') + '</div></div>';
+      }
+      $('p-periodos').innerHTML = html;
+      var tmax = null, tmin = null;
+      if (c.daily) { for (var dI = 0; dI < c.daily.time.length; dI++) { if (c.daily.time[dI] === alvo) { tmax = c.daily.temperature_2m_max[dI]; tmin = c.daily.temperature_2m_min[dI]; } } }
+      $('p-clima-titulo').textContent = 'Clima' + (tmax !== null ? ' · mín ' + Math.round(tmin) + '° / máx ' + Math.round(tmax) + '°' : '');
+
+      // Alertas de chuva: agrupa horas seguidas com chance >= 40% ou chuva medida
+      for (var k = 0; k < H.time.length; k++) {
+        if (H.time[k].substr(0, 10) !== alvo) { continue; }
+        var h2 = parseInt(H.time[k].substr(11, 2), 10);
+        if (h2 < 5 || h2 > 23) { continue; }
+        var prob = H.precipitation_probability[k] || 0, mm = H.precipitation[k] || 0;
+        if (prob >= 40 || mm >= 0.3) {
+          if (blocoAtual && blocoAtual.fim === h2) { blocoAtual.fim = h2 + 1; blocoAtual.mm = Math.max(blocoAtual.mm, mm); blocoAtual.prob = Math.max(blocoAtual.prob, prob); }
+          else { blocoAtual = { ini: h2, fim: h2 + 1, mm: mm, prob: prob }; alertas.push(blocoAtual); }
+        }
+      }
+      if (!alertas.length) { $('p-chuva').innerHTML = '<div class="linha">Sem chuva prevista. Pode deixar o guarda-chuva.</div>'; }
+      else {
+        var t = '';
+        for (var a = 0; a < alertas.length; a++) {
+          var al = alertas[a];
+          t += '<div class="linha alerta">' + al.ini + 'h às ' + al.fim + 'h: chuva ' + intensidade(al.mm) +
+            ' (até ' + al.mm.toFixed(1).replace('.', ',') + ' mm/h, chance ' + al.prob + '%)</div>';
+        }
+        $('p-chuva').innerHTML = t;
+      }
+    } else {
+      $('p-periodos').innerHTML = '<div class="linha">' + (dados.climaErro ? 'Sem dados do clima (' + dados.climaErro + ').' : 'Carregando...') + '</div>';
+      $('p-chuva').innerHTML = '';
+    }
+
+    // ---- Trajeto ----
+    var o = painelOp && OPCOES[painelOp];
+    if (o && o.rota) {
+      $('p-cartao-rota').style.display = '';
+      $('p-rota-titulo').textContent = 'Trajeto · ' + o.nome;
+      var r = dados.rota;
+      if (r && r.op === painelOp && Date.now() - r.em < 3 * 3600000) {
+        var min = Math.round(r.total / 60), atraso = Math.round(r.atraso / 60);
+        var chegada = new Date(Date.now() + r.total * 1000);
+        var linhas = '<div class="grande">' + min + ' min</div>' +
+          '<div class="linha">' + r.km.toFixed(1).replace('.', ',') + ' km · ' + (atraso > 0 ? atraso + ' min de trânsito a mais que o normal' : 'trânsito normal') + '</div>' +
+          '<div class="linha">Saindo agora, chega às ' + hhmm(chegada) + '</div>';
+        if (painelOp === 'A' && r.pernas.length === 2) {
+          linhas += '<div class="pequeno">Casa → Bar da Tilápia: ' + Math.round(r.pernas[0] / 60) + ' min · Bar → trabalho: ' + Math.round(r.pernas[1] / 60) + ' min</div>';
+        }
+        $('p-rota').innerHTML = linhas;
+      } else {
+        $('p-rota').innerHTML = '<div class="linha">' + (dados.rotaErro ? 'Sem trajeto: ' + dados.rotaErro + '.' : 'Calculando...') + '</div>';
+      }
+      var destino = cfg.pos && cfg.pos[o.rota[1]], origem = cfg.pos && cfg.pos.casa;
+      $('p-mapas').href = destino ? 'https://maps.apple.com/?saddr=' + (origem ? origem.lat + ',' + origem.lon : '') +
+        '&daddr=' + destino.lat + ',' + destino.lon + '&dirflg=d' : '#';
+    } else {
+      $('p-cartao-rota').style.display = 'none';
+    }
+    $('p-atualizado').textContent = dados.climaEm ? 'Clima atualizado às ' + hhmm(new Date(dados.climaEm)) : '';
+  }
+  $('bt-atualizar').addEventListener('click', function () { buscarDados(painelOp); });
+  $('bt-voltar-relogio').addEventListener('click', function () { mostrar('noite'); atualizarNoite(); });
+
+  // ====================================================================
+  // Ajustes
+  // ====================================================================
+  function abrirAjustes() {
+    $('aj-casa').value = cfg.casa; $('aj-bar').value = cfg.bar; $('aj-trabalho').value = cfg.trabalho;
+    $('aj-hA').value = cfg.hA; $('aj-hB').value = cfg.hB; $('aj-hC').value = cfg.hC; $('aj-alexa').value = cfg.alexa;
+    $('aj-volchuva').value = cfg.volChuva; $('aj-subida').value = cfg.subida; $('aj-chave').value = cfg.chave;
+    $('aj-msg').textContent = '';
+    $('aj-versao').textContent = 'Versão ' + VERSAO + ' · página de teste: /cabeceira/teste.html';
+    var nomes = ['casa', 'bar', 'trabalho'];
+    for (var i = 0; i < nomes.length; i++) {
+      var p = cfg.pos && cfg.pos[nomes[i]];
+      $('ac-' + nomes[i]).className = 'achado';
+      $('ac-' + nomes[i]).textContent = p ? 'Encontrado: ' + p.nome : 'Ainda não localizado. Toque em Salvar.';
+    }
+    mostrar('ajustes');
+  }
+  $('bt-fechar-ajustes').addEventListener('click', function () { mostrar('noite'); atualizarNoite(); });
+
+  function localizar(nome, texto, pronto) {
+    var el = $('ac-' + nome);
+    if (!cfg.chave) { el.className = 'achado erro'; el.textContent = 'Precisa da chave do TomTom para localizar.'; pronto(); return; }
+    el.className = 'achado'; el.textContent = 'Localizando...';
+    var url = 'https://api.tomtom.com/search/2/geocode/' + encodeURIComponent(texto) +
+      '.json?countrySet=BR&limit=1&language=pt-BR&key=' + encodeURIComponent(cfg.chave);
+    buscar(url, function (d) {
+      if (d.results && d.results.length) {
+        var r = d.results[0];
+        cfg.pos[nome] = { lat: r.position.lat, lon: r.position.lon, nome: r.address.freeformAddress };
+        el.textContent = 'Encontrado: ' + r.address.freeformAddress;
+      } else { delete cfg.pos[nome]; el.className = 'achado erro'; el.textContent = 'Não encontrei esse endereço. Confira a escrita.'; }
+      pronto();
+    }, function (m) { el.className = 'achado erro'; el.textContent = 'Não consegui localizar (' + m + ').'; pronto(); });
+  }
+
+  $('bt-salvar').addEventListener('click', function () {
+    var novo = { casa: $('aj-casa').value.trim(), bar: $('aj-bar').value.trim(), trabalho: $('aj-trabalho').value.trim() };
+    cfg.hA = $('aj-hA').value || cfg.hA; cfg.hB = $('aj-hB').value || cfg.hB; cfg.hC = $('aj-hC').value || cfg.hC;
+    cfg.alexa = $('aj-alexa').value || cfg.alexa;
+    cfg.volChuva = $('aj-volchuva').value; cfg.subida = $('aj-subida').value;
+    cfg.chave = $('aj-chave').value.replace(/\s/g, '');
+    if (!cfg.pos) { cfg.pos = {}; }
+    var nomes = ['casa', 'bar', 'trabalho'], faltam = 0;
+    function fim() { faltam--; if (faltam <= 0) { salvarCfg(); $('aj-msg').textContent = 'Salvo!'; } }
+    for (var i = 0; i < nomes.length; i++) {
+      var n = nomes[i];
+      if (novo[n] !== cfg[n] || !cfg.pos[n]) { cfg[n] = novo[n]; faltam++; localizar(n, novo[n], fim); }
+    }
+    if (!faltam) { salvarCfg(); $('aj-msg').textContent = 'Salvo!'; }
+    else { $('aj-msg').textContent = 'Localizando endereços...'; }
+  });
+
+  $('bt-teste-alarme').addEventListener('click', function () {
+    liberarSom();
+    var op = (plano && plano.op && plano.op !== 'D') ? plano.op : 'C';
+    plano = { op: op, alarmeEm: Date.now() + 2 * 60000, diaAlvo: chaveDia(new Date()), status: 'agendado', buscouDados: false, teste: true };
+    salvarPlano();
+    $('aj-msg').textContent = 'Alarme de teste (' + OPCOES[op].nome + ') marcado para ' + hhmm(new Date(plano.alarmeEm)) + '. Voltando ao relógio...';
+    setTimeout(function () { mostrar('noite'); atualizarNoite(); }, 1500);
+  });
+
+  // ====================================================================
+  // Relógio central: roda a cada segundo
+  // ====================================================================
+  var ultimoMinuto = -1;
+  function tique() {
+    var agora = new Date(), t = agora.getTime();
+    if (telaAtual === 'alarme') { $('a-relogio').textContent = hhmm(agora); }
+    if (telaAtual === 'painel') { $('p-hora').textContent = hhmm(agora); }
+    if (agora.getMinutes() !== ultimoMinuto) { ultimoMinuto = agora.getMinutes(); if (telaAtual === 'noite') { atualizarNoite(); } }
+
+    // Fim do timer da chuva
+    if (chuva.fimEm && t >= chuva.fimEm) { pararChuva(false); }
+
+    // Escolha automática: se ninguém escolheu nada até 03:00 de um dia útil, vale "Direto para o trabalho"
+    if (agora.getHours() === 3 && diaUtil(agora) && (!plano || plano.diaAlvo !== chaveDia(agora))) {
+      var alvoC = proximaOcorrencia(cfg.hC, agora);
+      plano = { op: 'C', alarmeEm: alvoC.getTime(), diaAlvo: chaveDia(alvoC), status: 'agendado', buscouDados: false, automatico: true };
+      salvarPlano(); atualizarNoite();
+    }
+
+    if (plano && plano.status === 'agendado' && plano.alarmeEm) {
+      // 15 minutos antes: já busca clima e trânsito
+      if (!plano.buscouDados && t >= plano.alarmeEm - 15 * 60000) { plano.buscouDados = true; salvarPlano(); buscarDados(plano.op); }
+      // Hora do alarme (até 2 horas de atraso, caso a página tenha recarregado)
+      if (t >= plano.alarmeEm && t < plano.alarmeEm + 2 * 3600000) { dispararAlarme(); }
+      else if (t >= plano.alarmeEm + 2 * 3600000) { plano.status = 'feito'; salvarPlano(); }
+    }
+  }
+  setInterval(tique, 1000);
+
+  // Se a página recarregou com o alarme tocando, volta para a tela de alarme
+  if (plano && plano.status === 'tocando') { plano.status = 'agendado'; }
+  atualizarNoite();
+  tique();
+
+  // Guarda a página no iPad para funcionar sem internet
+  if ('serviceWorker' in navigator) { try { navigator.serviceWorker.register('sw.js'); } catch (e) {} }
 })();
 </script>
 </body>
