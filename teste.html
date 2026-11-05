@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Cabeceira">
+<title>Cabeceira - Teste</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #000; color: #ddd;
+    font-family: -apple-system, Helvetica, Arial, sans-serif; }
+  body { padding: 20px; }
+  h1 { font-size: 26px; font-weight: 300; margin: 0 0 4px; }
+  .sub { color: #888; margin: 0 0 20px; font-size: 15px; }
+  #relogio { font-size: 96px; font-weight: 200; color: #c33; text-align: center;
+    letter-spacing: 2px; margin: 10px 0 20px; }
+  .teste { border: 1px solid #333; border-radius: 12px; padding: 14px 16px;
+    margin-bottom: 12px; overflow: hidden; }
+  .teste h2 { font-size: 19px; font-weight: 500; margin: 0 0 6px; }
+  .teste p { margin: 4px 0; font-size: 15px; color: #aaa; }
+  .status { float: right; font-size: 15px; font-weight: 600; padding: 4px 10px;
+    border-radius: 8px; background: #333; color: #ccc; }
+  .ok { background: #1e6b2e; color: #fff; }
+  .falha { background: #8a1f1f; color: #fff; }
+  .rodando { background: #7a5c00; color: #fff; }
+  button { font-size: 17px; padding: 10px 16px; margin: 8px 8px 0 0; border: 0;
+    border-radius: 10px; background: #2b4c7e; color: #fff; -webkit-appearance: none; }
+  button.cinza { background: #444; }
+  input { font-size: 17px; padding: 9px; width: 60%; border-radius: 8px;
+    border: 1px solid #555; background: #111; color: #fff; }
+  .resumo { font-size: 14px; color: #888; margin-top: 20px; }
+</style>
+</head>
+<body>
+<h1>Cabeceira: página de teste</h1>
+<p class="sub">Toque nos botões na ordem. Ao final, tire um print desta tela e mande no chat.</p>
+
+<div id="relogio">--:--</div>
+
+<div class="teste">
+  <span class="status" id="st-relogio">aguardando</span>
+  <h2>1. Relógio</h2>
+  <p>Fica verde sozinho se os segundos estiverem andando.</p>
+</div>
+
+<div class="teste">
+  <span class="status" id="st-chuva">aguardando</span>
+  <h2>2. Som de chuva</h2>
+  <p>Toque em Tocar. Deve ouvir chuva contínua, sem pausas. Se ouvir, toque em "Ouvi".</p>
+  <button id="bt-chuva">Tocar chuva</button>
+  <button id="bt-chuva-parar" class="cinza">Parar</button>
+  <button id="bt-chuva-ouvi" class="cinza">Ouvi</button>
+  <p id="msg-chuva"></p>
+</div>
+
+<div class="teste">
+  <span class="status" id="st-alarme">aguardando</span>
+  <h2>3. Alarme gradual</h2>
+  <p>Toque em Testar. Um bipe começa baixinho e sobe por 20 segundos. Se notar o som subindo, toque em "Subiu".</p>
+  <button id="bt-alarme">Testar alarme</button>
+  <button id="bt-alarme-parar" class="cinza">Parar</button>
+  <button id="bt-alarme-ouvi" class="cinza">Subiu</button>
+</div>
+
+<div class="teste">
+  <span class="status" id="st-clima">aguardando</span>
+  <h2>4. Clima de Santo André</h2>
+  <button id="bt-clima">Buscar clima</button>
+  <p id="msg-clima"></p>
+</div>
+
+<div class="teste">
+  <span class="status" id="st-transito">aguardando</span>
+  <h2>5. Trânsito (TomTom)</h2>
+  <p>Cole a sua chave do TomTom. Ela fica guardada só neste iPad.</p>
+  <input id="chave" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="chave do TomTom">
+  <br><button id="bt-transito">Testar trânsito</button>
+  <p id="msg-transito"></p>
+</div>
+
+<div class="teste">
+  <span class="status" id="st-offline">aguardando</span>
+  <h2>6. Funcionar sem internet</h2>
+  <p id="msg-offline">Verificando...</p>
+</div>
+
+<p class="resumo" id="info"></p>
+
+<script>
+(function () {
+  'use strict';
+
+  function $(id) { return document.getElementById(id); }
+  function marcar(id, estado, texto) {
+    var el = $(id);
+    el.className = 'status ' + estado;
+    el.textContent = texto;
+  }
+  function doisDigitos(n) { return n < 10 ? '0' + n : '' + n; }
+  function guardar(chave, valor) { try { localStorage.setItem(chave, valor); } catch (e) {} }
+  function ler(chave) { try { return localStorage.getItem(chave); } catch (e) { return null; } }
+
+  // Informações do aparelho, para eu saber o que está rodando
+  $('info').textContent = 'Aparelho: ' + navigator.userAgent;
+
+  // ---------- 1. Relógio ----------
+  var ultimoSegundo = -1, mudancas = 0;
+  function atualizarRelogio() {
+    var d = new Date();
+    $('relogio').textContent = doisDigitos(d.getHours()) + ':' + doisDigitos(d.getMinutes()) + ':' + doisDigitos(d.getSeconds());
+    if (d.getSeconds() !== ultimoSegundo) {
+      if (ultimoSegundo !== -1) { mudancas++; }
+      ultimoSegundo = d.getSeconds();
+      if (mudancas === 3) { marcar('st-relogio', 'ok', 'OK'); }
+    }
+  }
+  setInterval(atualizarRelogio, 250);
+  atualizarRelogio();
+
+  // ---------- Áudio (Web Audio) ----------
+  var Ctx = window.AudioContext || window.webkitAudioContext;
+  var ctx = null;
+  function obterAudio() {
+    if (!Ctx) { return null; }
+    if (!ctx) { ctx = new Ctx(); }
+    if (ctx.state === 'suspended' && ctx.resume) { ctx.resume(); }
+    // Truque do iOS: tocar um som vazio dentro do toque libera o áudio
+    var vazio = ctx.createBuffer(1, 1, 22050);
+    var src = ctx.createBufferSource();
+    src.buffer = vazio;
+    src.connect(ctx.destination);
+    if (src.start) { src.start(0); } else { src.noteOn(0); }
+    return ctx;
+  }
+
+  // ---------- 2. Chuva (ruído gerado, repete sem pausa) ----------
+  var chuvaFonte = null, chuvaGanho = null;
+  function criarChuva(c) {
+    var segundos = 6, taxa = c.sampleRate;
+    var buf = c.createBuffer(2, segundos * taxa, taxa);
+    for (var canal = 0; canal < 2; canal++) {
+      var dados = buf.getChannelData(canal), ultimo = 0;
+      for (var i = 0; i < dados.length; i++) {
+        var branco = Math.random() * 2 - 1;
+        ultimo = (ultimo + 0.02 * branco) / 1.02;   // ruído "marrom", grave como chuva
+        var gota = Math.random() < 0.0004 ? (Math.random() * 2 - 1) * 0.3 : 0;
+        dados[i] = ultimo * 3.2 + gota * 0.25 + branco * 0.04;
+      }
+      // emenda suave entre o fim e o começo
+      var emenda = Math.floor(taxa * 0.05);
+      for (var j = 0; j < emenda; j++) {
+        var f = j / emenda;
+        dados[dados.length - emenda + j] = dados[dados.length - emenda + j] * (1 - f) + dados[j] * f;
+      }
+    }
+    return buf;
+  }
+  $('bt-chuva').addEventListener('click', function () {
+    var c = obterAudio();
+    if (!c) { marcar('st-chuva', 'falha', 'FALHOU'); $('msg-chuva').textContent = 'Este navegador não tem Web Audio.'; return; }
+    pararChuva();
+    chuvaFonte = c.createBufferSource();
+    chuvaFonte.buffer = criarChuva(c);
+    chuvaFonte.loop = true;
+    chuvaGanho = c.createGain();
+    chuvaGanho.gain.setValueAtTime(0.0001, c.currentTime);
+    chuvaGanho.gain.linearRampToValueAtTime(0.8, c.currentTime + 3);
+    chuvaFonte.connect(chuvaGanho);
+    chuvaGanho.connect(c.destination);
+    if (chuvaFonte.start) { chuvaFonte.start(0); } else { chuvaFonte.noteOn(0); }
+    marcar('st-chuva', 'rodando', 'tocando');
+    $('msg-chuva').textContent = 'Se não ouvir nada: confira a chave lateral do iPad e o volume.';
+  });
+  function pararChuva() {
+    if (chuvaFonte) { try { chuvaFonte.stop(0); } catch (e) {} chuvaFonte = null; }
+  }
+  $('bt-chuva-parar').addEventListener('click', pararChuva);
+  $('bt-chuva-ouvi').addEventListener('click', function () {
+    marcar('st-chuva', 'ok', 'OK'); guardar('teste-chuva', 'ok');
+  });
+
+  // ---------- 3. Alarme gradual ----------
+  var alarmeOsc = null, alarmeGanho = null, alarmeBipe = null;
+  $('bt-alarme').addEventListener('click', function () {
+    var c = obterAudio();
+    if (!c) { marcar('st-alarme', 'falha', 'FALHOU'); return; }
+    pararAlarme();
+    alarmeOsc = c.createOscillator();
+    alarmeOsc.type = 'sine';
+    alarmeOsc.frequency.value = 880;
+    alarmeBipe = c.createGain();     // liga e desliga (bipe)
+    alarmeGanho = c.createGain();    // volume que sobe devagar
+    var t = c.currentTime;
+    alarmeBipe.gain.setValueAtTime(0, t);
+    for (var k = 0; k < 40; k++) {
+      alarmeBipe.gain.setValueAtTime(1, t + k * 0.5);
+      alarmeBipe.gain.setValueAtTime(0, t + k * 0.5 + 0.25);
+    }
+    alarmeGanho.gain.setValueAtTime(0.02, t);
+    alarmeGanho.gain.linearRampToValueAtTime(0.9, t + 20);
+    alarmeOsc.connect(alarmeBipe);
+    alarmeBipe.connect(alarmeGanho);
+    alarmeGanho.connect(c.destination);
+    if (alarmeOsc.start) { alarmeOsc.start(t); alarmeOsc.stop(t + 20); } else { alarmeOsc.noteOn(t); alarmeOsc.noteOff(t + 20); }
+    marcar('st-alarme', 'rodando', 'tocando');
+  });
+  function pararAlarme() {
+    if (alarmeOsc) { try { alarmeOsc.stop(0); } catch (e) {} alarmeOsc = null; }
+  }
+  $('bt-alarme-parar').addEventListener('click', pararAlarme);
+  $('bt-alarme-ouvi').addEventListener('click', function () {
+    pararAlarme(); marcar('st-alarme', 'ok', 'OK'); guardar('teste-alarme', 'ok');
+  });
+
+  // ---------- Requisições (XMLHttpRequest funciona em qualquer Safari) ----------
+  function buscar(url, sucesso, erro) {
+    var x = new XMLHttpRequest();
+    x.open('GET', url, true);
+    x.timeout = 15000;
+    x.onload = function () {
+      if (x.status >= 200 && x.status < 300) {
+        try { sucesso(JSON.parse(x.responseText)); } catch (e) { erro('resposta inválida'); }
+      } else { erro('código ' + x.status); }
+    };
+    x.onerror = function () { erro('sem conexão ou certificado recusado'); };
+    x.ontimeout = function () { erro('demorou demais'); };
+    x.send();
+  }
+
+  // ---------- 4. Clima ----------
+  $('bt-clima').addEventListener('click', function () {
+    marcar('st-clima', 'rodando', 'buscando');
+    $('msg-clima').textContent = '';
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=-23.66&longitude=-46.53' +
+      '&hourly=temperature_2m,precipitation_probability,precipitation&forecast_days=1&timezone=America%2FSao_Paulo';
+    buscar(url, function (d) {
+      var h = d.hourly, agora = new Date().getHours();
+      var temp = h.temperature_2m[agora], chuva = h.precipitation_probability[agora];
+      $('msg-clima').textContent = 'Agora: ' + Math.round(temp) + '°C, chance de chuva ' + chuva + '%.';
+      marcar('st-clima', 'ok', 'OK');
+    }, function (motivo) {
+      $('msg-clima').textContent = 'Falhou: ' + motivo + '.';
+      marcar('st-clima', 'falha', 'FALHOU');
+    });
+  });
+
+  // ---------- 5. Trânsito ----------
+  var chaveSalva = ler('tomtom-chave');
+  if (chaveSalva) { $('chave').value = chaveSalva; }
+  $('bt-transito').addEventListener('click', function () {
+    var chave = $('chave').value.replace(/\s/g, '');
+    if (!chave) { $('msg-transito').textContent = 'Cole a chave primeiro.'; return; }
+    guardar('tomtom-chave', chave);
+    marcar('st-transito', 'rodando', 'buscando');
+    $('msg-transito').textContent = '';
+    // Trajeto genérico de teste: centro de Santo André até o centro de São Paulo
+    var url = 'https://api.tomtom.com/routing/1/calculateRoute/-23.6545,-46.5320:-23.5505,-46.6333/json' +
+      '?traffic=true&travelMode=car&key=' + encodeURIComponent(chave);
+    buscar(url, function (d) {
+      var r = d.routes[0].summary;
+      var min = Math.round(r.travelTimeInSeconds / 60), atraso = Math.round((r.trafficDelayInSeconds || 0) / 60);
+      $('msg-transito').textContent = 'Santo André até o centro de SP agora: ' + min + ' min (' + atraso + ' min de atraso por trânsito).';
+      marcar('st-transito', 'ok', 'OK');
+    }, function (motivo) {
+      $('msg-transito').textContent = 'Falhou: ' + motivo + '. Confira se a chave foi colada inteira.';
+      marcar('st-transito', 'falha', 'FALHOU');
+    });
+  });
+
+  // ---------- 6. Sem internet (service worker) ----------
+  if (!('serviceWorker' in navigator)) {
+    marcar('st-offline', 'falha', 'FALHOU');
+    $('msg-offline').textContent = 'Este Safari não consegue guardar a página para uso sem internet.';
+  } else {
+    navigator.serviceWorker.register('sw.js').then(function () {
+      if (!navigator.onLine) {
+        marcar('st-offline', 'ok', 'OK');
+        $('msg-offline').textContent = 'A página abriu sem internet. Funcionou! Pode religar o Wi-Fi.';
+      } else {
+        marcar('st-offline', 'rodando', 'falta 1 passo');
+        $('msg-offline').textContent = 'Página guardada. Para confirmar: feche o Safari, desligue o Wi-Fi, abra esta página de novo e veja se fica verde.';
+      }
+    }, function () {
+      marcar('st-offline', 'falha', 'FALHOU');
+      $('msg-offline').textContent = 'Não consegui guardar a página no iPad.';
+    });
+  }
+})();
+</script>
+</body>
+</html>
