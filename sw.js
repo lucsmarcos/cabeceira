@@ -1,5 +1,5 @@
 // Guarda a página no iPad para ela abrir mesmo sem internet.
-var CACHE = 'cabeceira-v2';
+var CACHE = 'cabeceira-v3';
 var ARQUIVOS = ['./', './index.html', './teste.html'];
 
 self.addEventListener('install', function (e) {
