@@ -24,11 +24,35 @@
   #n-data { color: #4a0e0e; font-size: 3.4vw; margin-top: 1vh; }
   #n-plano { color: #4a0e0e; font-size: 2.8vw; margin-top: 4vh; min-height: 3.5vw; }
   #n-aviso { color: #a33; font-size: 2.6vw; margin-top: 2vh; display: none; }
-  #n-botoes { position: absolute; left: 0; right: 0; bottom: 6vh; }
+  #n-botoes { position: absolute; left: 0; right: 0; bottom: 5vh; }
   .btn-noite { background: #140404; color: #6a1a1a; border: 1px solid #2a0808;
-    font-size: 2.6vw; padding: 1.6vw 3.4vw; border-radius: 3vw; margin: 0 1vw; }
+    font-size: 2.6vw; padding: 1.6vw 3.4vw; border-radius: 3vw; margin: 0 1vw; vertical-align: middle; }
+  /* botão principal: grande e fácil de tocar */
+  #bt-boanoite { display: block; margin: 0 auto 2.4vh; width: 60vw; min-height: 12vh;
+    font-size: 4.2vw; font-weight: 400; border-radius: 6vh; }
   #bt-engrenagem { position: absolute; top: 0; right: 0; width: 13vw; height: 13vw;
     background: transparent; color: #1c0505; font-size: 3vw; }
+  #n-clima { display: none; }
+
+  /* ---------- Modo acordado: relógio bonito ---------- */
+  #noite.dia { color: #fff; background: #1c6ea4;
+    -webkit-transition: background 2s; transition: background 2s; }
+  #noite.dia.madrugada { background: linear-gradient(160deg, #0f2027 0%, #203a43 55%, #2c5364 100%); }
+  #noite.dia.manha { background: linear-gradient(160deg, #1e3c72 0%, #2a5298 50%, #f7b267 100%); }
+  #noite.dia.tarde { background: linear-gradient(160deg, #1c6ea4 0%, #3f97cf 55%, #9fd3ec 100%); }
+  #noite.dia.entardecer { background: linear-gradient(160deg, #2c3e75 0%, #8e3e8f 55%, #f4a261 100%); }
+  #noite.dia.anoitecer { background: linear-gradient(160deg, #141e30 0%, #243b55 60%, #3a4f7a 100%); }
+  #noite.dia #n-relogio { color: #fff; font-weight: 100; margin-top: 12vh;
+    text-shadow: 0 0.4vw 2vw rgba(0,0,0,0.25); }
+  #noite.dia #n-data { color: rgba(255,255,255,0.92); font-size: 3.6vw; font-weight: 300;
+    text-shadow: 0 0.2vw 1vw rgba(0,0,0,0.25); }
+  #noite.dia #n-clima { display: block; color: rgba(255,255,255,0.9); font-size: 3vw;
+    font-weight: 300; margin-top: 3vh; text-shadow: 0 0.2vw 1vw rgba(0,0,0,0.25); }
+  #noite.dia #n-plano { color: rgba(255,255,255,0.75); }
+  #noite.dia .btn-noite { background: rgba(255,255,255,0.16); color: #fff;
+    border: 1px solid rgba(255,255,255,0.4); }
+  #noite.dia #bt-boanoite { background: rgba(255,255,255,0.24); font-weight: 500; }
+  #noite.dia #bt-engrenagem { color: rgba(255,255,255,0.3); }
 
   /* ---------- Escolha ---------- */
   #escolha { background: #050000; padding: 5vh 6vw; }
@@ -110,10 +134,11 @@
   <button id="bt-engrenagem" aria-label="Ajustes (segure 3 segundos)">&#9881;</button>
   <div id="n-relogio">--:--</div>
   <div id="n-data"></div>
+  <div id="n-clima"></div>
   <div id="n-plano"></div>
   <div id="n-aviso">Toque na tela para ativar o som do alarme</div>
   <div id="n-botoes">
-    <button class="btn-noite" id="bt-boanoite">Boa Noite, Jarvis</button>
+    <button class="btn-noite" id="bt-boanoite">Boa noite, Lucas</button>
     <button class="btn-noite" id="bt-parar-chuva" style="display:none">Parar chuva</button>
     <button class="btn-noite" id="bt-clima-noite">Clima</button>
   </div>
@@ -217,7 +242,7 @@
 <script>
 (function () {
   'use strict';
-  var VERSAO = '1.0 (05/11/2026)';
+  var VERSAO = '1.1 (05/11/2026)';
 
   // ====================================================================
   // Utilidades
@@ -478,8 +503,41 @@
   // ====================================================================
   // Tela da noite
   // ====================================================================
+  // Modo acordado (fundo bonito) até tocar em "Boa noite"; modo noite (escuro) enquanto o alarme está marcado
+  function faseDoDia(h) {
+    if (h >= 5 && h < 9) { return 'manha'; }
+    if (h >= 9 && h < 16) { return 'tarde'; }
+    if (h >= 16 && h < 19) { return 'entardecer'; }
+    if (h >= 19 && h < 23) { return 'anoitecer'; }
+    return 'madrugada';
+  }
+  function modoNoite() { return !!(plano && plano.status === 'agendado') || !!chuva.ganho; }
+
+  var climaAgoraEm = 0;
+  function climaAgora() {
+    var c = dados.clima, agora = new Date();
+    if (!c || !c.hourly) { return ''; }
+    var chave = chaveDia(agora) + 'T' + dd(agora.getHours()) + ':00';
+    var i = c.hourly.time.indexOf(chave);
+    if (i < 0) { return ''; }
+    var txt = Math.round(c.hourly.temperature_2m[i]) + '° · ' + (CODIGOS[c.hourly.weather_code[i]] || '');
+    var p = c.hourly.precipitation_probability[i];
+    return p >= 30 ? txt + ' · chuva ' + p + '%' : txt;
+  }
+
   function atualizarNoite() {
     var agora = new Date();
+    var noite = modoNoite();
+    $('noite').className = noite ? 'tela ativa' : 'tela ativa dia ' + faseDoDia(agora.getHours());
+    if (telaAtual !== 'noite') { $('noite').className = $('noite').className.replace(' ativa', ''); }
+    $('bt-boanoite').textContent = noite ? 'Mudar rotina' : 'Boa noite, Lucas';
+    if (!noite) {
+      $('n-clima').textContent = climaAgora();
+      if (Date.now() - climaAgoraEm > 30 * 60000) {   // atualiza o clima a cada 30 min
+        climaAgoraEm = Date.now();
+        buscarClima(function () { if (!modoNoite()) { $('n-clima').textContent = climaAgora(); } });
+      }
+    }
     $('n-relogio').textContent = hhmm(agora);
     $('n-data').textContent = dataExtenso(agora);
     var txt = '';
@@ -495,7 +553,7 @@
   }
 
   $('bt-boanoite').addEventListener('click', function () { abrirEscolha(); });
-  $('bt-parar-chuva').addEventListener('click', function () { pararChuva(false); });
+  $('bt-parar-chuva').addEventListener('click', function () { pararChuva(false); atualizarNoite(); });
   $('bt-clima-noite').addEventListener('click', function () {
     var agora = new Date();
     abrirPainel(null, agora.getHours() >= 15);   // à noite mostra o clima de amanhã
@@ -834,6 +892,12 @@
       var alvoC = proximaOcorrencia(cfg.hC, agora);
       plano = { op: 'C', alarmeEm: alvoC.getTime(), diaAlvo: chaveDia(alvoC), status: 'agendado', buscouDados: false, automatico: true };
       salvarPlano(); atualizarNoite();
+    }
+
+    // Fim de semana (sem alarme): às 07:00 do dia escolhido, volta ao modo acordado
+    if (plano && plano.status === 'agendado' && !plano.alarmeEm && plano.diaAlvo) {
+      var pd = plano.diaAlvo.split('-'), seteHoras = new Date(+pd[0], +pd[1] - 1, +pd[2], 7, 0, 0).getTime();
+      if (t >= seteHoras) { plano.status = 'feito'; salvarPlano(); pararChuva(false); if (telaAtual === 'noite') { atualizarNoite(); } }
     }
 
     if (plano && plano.status === 'agendado' && plano.alarmeEm) {
