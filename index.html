@@ -364,12 +364,12 @@
   }
 
   var cacheBuffers = {};
-  // Chuva com trovões (arquivo sons/chuva-trovao.m4a); se não carregar, usa a chuva gerada
+  // Chuva com trovões (arquivo sons/chuva-metal.m4a: chuva forte em telhado de metal); se não carregar, usa a chuva gerada
   function carregarChuvaArquivo() {
     if (cacheBuffers.chuvaArquivo || cacheBuffers.carregandoChuva || !ctx) { return; }
     cacheBuffers.carregandoChuva = true;
     var x = new XMLHttpRequest();
-    x.open('GET', 'sons/chuva-trovao.m4a', true);
+    x.open('GET', 'sons/chuva-metal.m4a', true);
     x.responseType = 'arraybuffer';
     x.onload = function () {
       if (x.status !== 200 && x.status !== 0) { cacheBuffers.carregandoChuva = false; return; }
