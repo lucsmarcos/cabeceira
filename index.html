@@ -168,7 +168,7 @@
   </div>
 </div>
 
-<!-- Confirmação com a frase para a Alexa -->
+<!-- Confirmação com o lembrete do alarme do celular -->
 <div id="confirmado" class="tela">
   <div id="c-titulo"></div>
   <div id="c-detalhe"></div>
@@ -220,7 +220,7 @@
     <div class="campo"><label>Levar a Gabi</label><input id="aj-hA" type="time"></div>
     <div class="campo"><label>Academia</label><input id="aj-hB" type="time"></div>
     <div class="campo"><label>Direto p/ trabalho</label><input id="aj-hC" type="time"></div>
-    <div class="campo"><label>Alarme fixo da Alexa (seg a sex)</label><input id="aj-alexa" type="time"></div>
+    <div class="campo"><label>Alarme fixo do celular (seg a sex)</label><input id="aj-alexa" type="time"></div>
   </div>
 
   <h2>Som</h2>
@@ -242,7 +242,7 @@
 <script>
 (function () {
   'use strict';
-  var VERSAO = '1.2 (05/11/2026)';
+  var VERSAO = '1.3 (05/11/2026)';
 
   // ====================================================================
   // Utilidades
@@ -508,7 +508,7 @@
       ? FRASES[Math.floor(Math.random() * FRASES.length)]
       : 'Bom dia! ' + (OPCOES[op] ? OPCOES[op].nome : '');
     var tocou = tocarAlarmeSom(op);
-    if (!tocou || !somLiberado) { $('a-frase').textContent += ' (o som do iPad não estava ativado; conte com a Alexa)'; }
+    if (!tocou || !somLiberado) { $('a-frase').textContent += ' (o som do iPad não estava ativado; conte com o celular)'; }
     mostrar('alarme');
     $('alarme').className = 'tela ativa';
     setTimeout(function () { $('alarme').className = 'tela ativa claro'; }, 50);  // tela clareia aos poucos
@@ -625,21 +625,21 @@
   }
   $('bt-cancelar-escolha').addEventListener('click', function () { mostrar('noite'); atualizarNoite(); });
 
-  // Frase que a Alexa precisa ouvir para o alarme dela bater com a rotina
+  // Lembrete do alarme reserva (celular) para bater com a rotina escolhida
   function fraseAlexa(op, quando) {
     var fixo = cfg.alexa, util = diaUtil(quando);
     var horaOp = OPCOES[op].hora();
     if (op === 'D') {
-      return util ? 'Diga: "Alexa, cancele o alarme de amanhã às ' + falado(fixo) + '".' : 'Nada a dizer para a Alexa. Bom descanso!';
+      return util ? 'No celular: desligue o alarme de amanhã às ' + fixo + '.' : 'Nada a mudar no celular. Bom descanso!';
     }
-    if (util && horaOp === fixo) { return 'A Alexa já vai tocar às ' + falado(fixo) + ' (alarme fixo). Nada a dizer.'; }
+    if (util && horaOp === fixo) { return 'O celular já toca às ' + fixo + ' (alarme fixo). Nada a mudar.'; }
+    if (util && horaOp > fixo) {
+      return 'No celular: desligue o alarme de amanhã às ' + fixo + ' e crie um às ' + horaOp + '.';
+    }
     if (util) {
-      if (horaOp > fixo) {
-        return 'Diga: "Alexa, cancele o alarme de amanhã às ' + falado(fixo) + '". Depois: "Alexa, me acorde às ' + falado(horaOp) + '".';
-      }
-      return 'Diga: "Alexa, me acorde às ' + falado(horaOp) + '". O alarme fixo das ' + falado(fixo) + ' toca depois, como reforço.';
+      return 'No celular: crie um alarme às ' + horaOp + '. O alarme fixo das ' + fixo + ' toca depois, como reforço.';
     }
-    return 'Diga: "Alexa, me acorde às ' + falado(horaOp) + '".';
+    return 'No celular: crie um alarme às ' + horaOp + '.';
   }
 
   $('bt-confirmar').addEventListener('click', function () {
